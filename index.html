@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pump Power Estimator</title>
+    <title>Pump Power Estimator & Sizer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        // Mengkonfigurasi Tailwind agar mendukung mode gelap secara manual via Class
         tailwind.config = {
             darkMode: 'class',
         }
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .glass-panel {
@@ -33,72 +31,75 @@
 
     <div class="max-w-5xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Header -->
-        <div class="lg:col-span-12 text-center mb-4 relative">
+        <!-- Header & Theme Toggle -->
+        <div class="lg:col-span-12 text-center mb-2 relative">
             <button id="themeToggle" class="absolute right-0 top-0 p-2.5 rounded-full bg-white dark:bg-gray-800 shadow-md text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors border border-gray-100 dark:border-gray-700">
                 <i class="fas fa-moon text-xl" id="themeIcon"></i>
             </button>
-            <h1 class="text-3xl md:text-4xl font-bold text-blue-900 dark:text-blue-400 mb-2"><i class="fas fa-water mr-3"></i>Kalkulator Estimasi Daya Pompa</h1>
-            <p class="text-gray-600 dark:text-gray-400">Alat estimasi cepat untuk engineer lapangan (Tanpa Database Supplier)</p>
+            <h1 class="text-3xl md:text-4xl font-bold text-blue-900 dark:text-blue-400 mb-2"><i class="fas fa-water mr-3"></i>Kalkulator Estimasi & Sizing Pompa</h1>
+            <p class="text-gray-600 dark:text-gray-400">Pencocokan jenis pompa lapangan berdasarkan Flow, Head, dan RPM secara real-istis</p>
         </div>
 
         <!-- Input Section -->
         <div class="lg:col-span-5 glass-panel bg-white/90 dark:bg-gray-800/90 border border-white/20 dark:border-gray-700 rounded-2xl p-6 md:p-8">
-            <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Parameter Kebutuhan</h2>
+            <h2 class="text-xl font-bold mb-6 text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Parameter Lapangan</h2>
             
-            <form id="calculatorForm" class="space-y-5">
+            <form id="calculatorForm" class="space-y-4">
                 
                 <div class="input-group">
                     <label for="waterCondition" class="dark:text-gray-300">Aplikasi & Kondisi Cairan</label>
                     <select id="waterCondition" required class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500">
-                        <option value="clean" selected>Air Bersih / PDAM / Industri</option>
-                        <option value="dirty">Air Kotor / Limbah (Sewage/Sludge)</option>
+                        <option value="clean" selected>Air Bersih / PDAM / Industri Umum</option>
+                        <option value="dirty">Air Kotor / Limbah (Sewage / Sludge)</option>
                         <option value="deep_well">Sumur Dalam (Borehole / Deep Well)</option>
                     </select>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Digunakan untuk menyaring tipe pompa yang relevan.</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div class="input-group">
                         <label for="flow" class="dark:text-gray-300">Flow Capacity (Q)</label>
-                        <div class="flex">
-                            <input type="number" id="flow" required min="0" step="0.1" class="rounded-r-none border-r-0 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500" placeholder="0">
-                            <select id="flowUnit" class="rounded-l-none bg-gray-50 dark:bg-gray-600 dark:border-gray-600 dark:text-white w-24">
-                                <option value="m3h">m³/h</option>
-                                <option value="lps">L/s</option>
-                            </select>
-                        </div>
+                        <input type="number" id="flow" required min="0" step="any" class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500" placeholder="Contoh: 50">
                     </div>
 
                     <div class="input-group">
-                        <label for="head" class="dark:text-gray-300">Total Head (H)</label>
-                        <div class="flex">
-                            <input type="number" id="head" required min="0" step="0.1" class="rounded-r-none border-r-0 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500" placeholder="0">
-                            <span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 sm:text-sm">Meter</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="input-group">
-                        <label for="sg" class="dark:text-gray-300">Specific Gravity (SG)</label>
-                        <input type="number" id="sg" value="1.0" min="0.5" max="2.0" step="0.01" class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Air bersih = 1.0</p>
-                    </div>
-                    
-                    <div class="input-group">
-                        <label for="rpm" class="dark:text-gray-300">RPM (Opsional)</label>
-                        <select id="rpm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500">
-                            <option value="">Tidak Ditentukan</option>
-                            <option value="2900">~2900 RPM (2 Pole)</option>
-                            <option value="1450">~1450 RPM (4 Pole)</option>
-                            <option value="960">~960 RPM (6 Pole)</option>
+                        <label for="flowUnit" class="dark:text-gray-300">Satuan Flow</label>
+                        <select id="flowUnit" class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500">
+                            <option value="m3h">m³/h (Cubic m/hr)</option>
+                            <option value="m3s">m³/s (Cubic m/sec)</option>
+                            <option value="lps">L/s (Liter/sec)</option>
+                            <option value="lpm">LPM (Liter/min)</option>
+                            <option value="usgpm">USGPM (US Gal/min)</option>
                         </select>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition duration-200 mt-4 shadow-lg shadow-blue-200">
-                    Cari & Kalkulasi Pompa <i class="fas fa-search ml-2"></i>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="input-group">
+                        <label for="head" class="dark:text-gray-300">Total Head (H)</label>
+                        <div class="flex">
+                            <input type="number" id="head" required min="0" step="any" class="rounded-r-none border-r-0 dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500" placeholder="0">
+                            <span class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 text-xs">Meter</span>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="rpm" class="dark:text-gray-300">Kecepatan Motor (RPM)</label>
+                        <select id="rpm" class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500">
+                            <option value="2900">~2900 RPM (2 Pole - Tinggi)</option>
+                            <option value="1450" selected>~1450 RPM (4 Pole - Standar)</option>
+                            <option value="960">~960 RPM (6 Pole - Lambat)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="sg" class="dark:text-gray-300">Specific Gravity (SG)</label>
+                    <input type="number" id="sg" value="1.0" min="0.5" max="2.0" step="0.01" class="dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:border-blue-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Air bersih = 1.0 | Air laut ≈ 1.025</p>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition duration-200 mt-2 shadow-lg shadow-blue-200 dark:shadow-none">
+                    Analisis Jenis Pompa & Daya <i class="fas fa-search ml-2"></i>
                 </button>
             </form>
         </div>
@@ -108,35 +109,33 @@
             
             <div id="loadingState" class="hidden glass-panel bg-white/90 dark:bg-gray-800/90 border border-white/20 dark:border-gray-700 rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center">
                 <i class="fas fa-circle-notch fa-spin text-5xl text-blue-500 mb-4"></i>
-                <h3 class="text-xl font-medium text-gray-700 dark:text-gray-200">Menganalisis Titik Kerja (Duty Point)...</h3>
-                <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">Mencocokkan Flow dan Head dengan profil pompa standar.</p>
+                <h3 class="text-xl font-medium text-gray-700 dark:text-gray-200">Menganalisis Kurva & Karakteristik Pompa...</h3>
+                <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">Mencocokkan Flow, Head, dan RPM dengan rentang operasional standar.</p>
             </div>
 
             <!-- Dynamic Recommendation Wrapper -->
             <div id="resultsWrapper" class="hidden space-y-4">
                 <div class="flex justify-between items-end border-b border-gray-200 dark:border-gray-700 pb-2">
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Rekomendasi Tipe Pompa</h3>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Hasil Rekomendasi Pompa</h3>
                     <span id="matchCount" class="text-sm bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 py-1 px-3 rounded-lg font-semibold border border-blue-200 dark:border-blue-800"></span>
                 </div>
                 
-                <!-- Cards will be injected here by Javascript -->
-                <div id="recommendationList" class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar"></div>
+                <div id="recommendationList" class="space-y-4 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar"></div>
             </div>
             
             <!-- Empty State -->
             <div id="emptyState" class="glass-panel bg-white/90 dark:bg-gray-800/90 border border-white/20 dark:border-gray-700 rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center">
                 <div class="text-gray-300 dark:text-gray-600 mb-4">
-                    <i class="fas fa-chart-line text-6xl"></i>
+                    <i class="fas fa-cogs text-6xl"></i>
                 </div>
-                <h3 class="text-xl font-medium text-gray-500 dark:text-gray-400">Tentukan Duty Point</h3>
-                <p class="text-gray-400 dark:text-gray-500 mt-2 max-w-sm mx-auto">Masukkan Flow (Kapasitas) dan Head di form untuk melihat rekomendasi jenis pompa yang sesuai rentang kerjanya.</p>
+                <h3 class="text-xl font-medium text-gray-500 dark:text-gray-400">Belum Ada Data Dianalisis</h3>
+                <p class="text-gray-400 dark:text-gray-500 mt-2 max-w-sm mx-auto text-sm">Masukkan parameter Flow, Head, dan RPM di panel sebelah kiri untuk melihat tipe pompa yang paling cocok secara teknis.</p>
             </div>
 
         </div>
     </div>
 
     <style>
-        /* Custom scrollbar for recommendation list */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -144,124 +143,144 @@
     </style>
 
     <script>
-        // Database Pump Selection Matrix 
-        // qMin/qMax in m3/h, hMin/hMax in meter
+        // Database Matrix Pompa dengan Thumbnail Representatif (Bisa diganti URL foto asli kapanpun)
         const pumpDatabase = [
             { 
-                id: 'end_suction', name: 'End Suction Centrifugal', eff: 75, apps: ['clean'], 
-                qMin: 2, qMax: 1000, hMin: 5, hMax: 150, 
-                desc: 'Pompa paling umum di pasaran. Desain simple, harga ekonomis, mudah dirawat. Ideal untuk transfer air bersih umum.' 
+                id: 'end_suction', 
+                name: 'Horizontal Centrifugal End Suction', 
+                eff: 75, 
+                apps: ['clean'], 
+                qMin: 5, qMax: 800, hMin: 5, hMax: 120, 
+                desc: 'Paling umum di pasaran untuk transfer air bersih. Inlet di depan, discharge menghadap ke atas.',
+                img: 'https://github.com/carloadi/pump-estimator/blob/main/img/horizontal-end-suction-centrifugal.webp?auto=format&fit=crop&w=300&q=80'
             },
             { 
-                id: 'split_case', name: 'Horizontal Split Case', eff: 82, apps: ['clean'], 
-                qMin: 150, qMax: 10000, hMin: 10, hMax: 200, 
-                desc: 'Didesain untuk kapasitas aliran (Flow) raksasa. Konstruksi kokoh dan efisiensi sangat tinggi. Cocok untuk intake PDAM atau cooling tower.' 
+                id: 'split_case', 
+                name: 'Horizontal Split Case Pump', 
+                eff: 82, 
+                apps: ['clean'], 
+                qMin: 120, qMax: 8000, hMin: 10, hMax: 180, 
+                desc: 'Dirancang untuk kapasitas aliran raksasa dengan efisiensi tinggi. Ideal untuk PDAM & Cooling Tower.',
+                img: 'https://github.com/carloadi/pump-estimator/blob/main/img/split-case.webp?auto=format&fit=crop&w=300&q=80'
             },
             { 
-                id: 'vertical_multistage', name: 'Vertical Multistage', eff: 70, apps: ['clean'], 
-                qMin: 1, qMax: 150, hMin: 25, hMax: 300, 
-                desc: 'Dirancang menggunakan banyak kipas (stage) untuk menghasilkan dorongan vertikal (Head) yang sangat tinggi. Sering dipakai untuk booster gedung bertingkat.' 
+                id: 'vertical_multistage', 
+                name: 'Vertical Multistage Pump', 
+                eff: 70, 
+                apps: ['clean'], 
+                qMin: 1, qMax: 120, hMin: 30, hMax: 280, 
+                desc: 'Memiliki banyak tingkat impeller untuk menghasilkan dorongan vertikal yang sangat tinggi (Booster gedung).',
+                img: 'https://github.com/carloadi/pump-estimator/blob/main/img/vertical-multistage.png?auto=format&fit=crop&w=300&q=80'
             },
             { 
-                id: 'vertical_turbine', name: 'Vertical Turbine', eff: 80, apps: ['clean', 'deep_well'], 
-                qMin: 50, qMax: 5000, hMin: 15, hMax: 200, 
-                desc: 'Motor berada di atas tanah, sementara baling-baling memanjang ke dalam kolam/sumur. Ideal untuk menyedot air dari basin terbuka.' 
+                id: 'vertical_turbine', 
+                name: 'Vertical Turbine Pump', 
+                eff: 80, 
+                apps: ['clean', 'deep_well'], 
+                qMin: 40, qMax: 4000, hMin: 15, hMax: 180, 
+                desc: 'Motor di atas permukaan, poros panjang menjuntai ke dalam sumur terbuka atau waduk besar.',
+                img: 'https://github.com/carloadi/pump-estimator/blob/main/img/vertical-turbine.png?auto=format&fit=crop&w=300&q=80'
             },
             { 
-                id: 'submersible', name: 'Borehole Submersible', eff: 72, apps: ['clean', 'deep_well'], 
-                qMin: 1, qMax: 500, hMin: 20, hMax: 400, 
-                desc: 'Seluruh unit (motor dan pompa) ditenggelamkan ke dalam sumur bor yang sempit. Sangat senyap dan efisien untuk sumur dalam.' 
+                id: 'submersible', 
+                name: 'Borehole Submersible Pump', 
+                eff: 72, 
+                apps: ['clean', 'deep_well'], 
+                qMin: 1, qMax: 400, hMin: 20, hMax: 350, 
+                desc: 'Unit terendam sepenuhnya di dalam pipa sumur bor sempit. Senyap, efisien, dan andal untuk deep well.',
+                img: 'https://github.com/carloadi/pump-estimator/blob/main/img/deep-borewell.jfif?auto=format&fit=crop&w=300&q=80'
             },
             { 
-                id: 'sewage', name: 'Sewage / Non-Clog Submersible', eff: 60, apps: ['dirty'], 
-                qMin: 5, qMax: 3000, hMin: 2, hMax: 60, 
-                desc: 'Memiliki jalur impeller yang lebar (Vortex/Non-Clog) agar sampah atau lumpur padat dapat lolos tanpa membuat pompa macet.' 
+                id: 'sewage', 
+                name: 'Sewage / Non-Clog Submersible', 
+                eff: 60, 
+                apps: ['dirty'], 
+                qMin: 10, qMax: 2500, hMin: 2, hMax: 50, 
+                desc: 'Dilengkapi impeller vortex anti-sumbat untuk melewatkan limbah padat dan kotoran tanpa macet.',
+                img: 'https://github.com/carloadi/pump-estimator/blob/main/img/sewage-non-clog.webp?auto=format&fit=crop&w=300&q=80'
             }
         ];
 
-        // Standard electric motor sizes in kW (IEC standards)
         const standardMotors = [0.37, 0.55, 0.75, 1.1, 1.5, 2.2, 3.0, 4.0, 5.5, 7.5, 11, 15, 18.5, 22, 30, 37, 45, 55, 75, 90, 110, 132, 160, 200, 250, 315, 355, 400];
 
         document.getElementById('calculatorForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // UI Transitions: Show loading, hide empty state and previous results
             document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('resultsWrapper').classList.add('hidden');
             document.getElementById('loadingState').classList.remove('hidden');
 
-            // Simulate processing time for UX so user knows logic is running
             setTimeout(() => { 
-                
-                // Get Input Values
                 const waterCondition = document.getElementById('waterCondition').value;
-                let flow = parseFloat(document.getElementById('flow').value);
+                let rawFlow = parseFloat(document.getElementById('flow').value);
                 const flowUnit = document.getElementById('flowUnit').value;
                 const head = parseFloat(document.getElementById('head').value);
+                const rpm = parseInt(document.getElementById('rpm').value);
                 const sg = parseFloat(document.getElementById('sg').value);
 
-                // Convert flow to m3/h for calculation if needed
-                if (flowUnit === 'lps') {
-                    flow = flow * 3.6; // 1 L/s = 3.6 m3/h
+                // Konversi berbagai satuan Flow ke standar m³/h di dalam sistem kalkulasi
+                let flowM3h = rawFlow;
+                if (flowUnit === 'm3s') {
+                    flowM3h = rawFlow * 3600; // 1 m3/s = 3600 m3/h
+                } else if (flowUnit === 'lps') {
+                    flowM3h = rawFlow * 3.6; // 1 L/s = 3.6 m3/h
+                } else if (flowUnit === 'lpm') {
+                    flowM3h = rawFlow * 0.06; // 1 LPM = 0.06 m3/h
+                } else if (flowUnit === 'usgpm') {
+                    flowM3h = rawFlow * 0.227124; // 1 USGPM ≈ 0.227124 m3/h
                 }
 
-                // Calculate base Hydraulic Power
-                const hydraulicPower = (flow * head * sg * 9.81) / 3600;
+                // Hitung Daya Hidrolik Dasar (Hydraulic Power)
+                const hydraulicPower = (flowM3h * head * sg * 9.81) / 3600;
 
-                // Array to hold matching pumps
                 let recommendations = [];
 
-                // Logic Engine: Check each pump in database against user inputs
                 pumpDatabase.forEach(pump => {
-                    // 1. Check Application Constraint (Is it suitable for the fluid/environment?)
                     if (!pump.apps.includes(waterCondition)) return;
 
                     let score = 0;
                     let matchStatus = '';
                     let statusColor = '';
 
-                    // 2. Check Q (Flow) & H (Head) Constraints against sweet-spots
-                    const isOptimalQ = flow >= pump.qMin && flow <= pump.qMax;
+                    const isOptimalQ = flowM3h >= pump.qMin && flowM3h <= pump.qMax;
                     const isOptimalH = head >= pump.hMin && head <= pump.hMax;
                     
-                    // Allow 20% margin for "Alternative" solutions
-                    const isBorderQ = flow >= (pump.qMin * 0.8) && flow <= (pump.qMax * 1.2);
-                    const isBorderH = head >= (pump.hMin * 0.8) && head <= (pump.hMax * 1.2);
+                    const isBorderQ = flowM3h >= (pump.qMin * 0.75) && flowM3h <= (pump.qMax * 1.25);
+                    const isBorderH = head >= (pump.hMin * 0.75) && head <= (pump.hMax * 1.25);
 
                     if (isOptimalQ && isOptimalH) {
                         score = 100;
-                        matchStatus = 'Sangat Cocok (Optimal)';
+                        matchStatus = 'Sangat Cocok (Sweet Spot)';
                         statusColor = 'text-green-700 bg-green-50 border-green-200';
                     } else if (isBorderQ && isBorderH) {
                         score = 50; 
-                        matchStatus = 'Alternatif (Toleransi 20%)';
+                        matchStatus = 'Alternatif (Toleransi Batas)';
                         statusColor = 'text-yellow-700 bg-yellow-50 border-yellow-200';
                     } else {
-                        // Completely out of operating envelope
-                        return; 
+                        return; // Di luar kurva operasional
                     }
 
-                    // 3. Calculate Power based on this specific pump's typical efficiency
-                    const shaftPower = hydraulicPower / (pump.eff / 100);
-                    
-                    // 4. Calculate Safety Factor based on motor size
-                    let safetyFactor = 1.10; // Default 10%
-                    if (shaftPower < 1.5) safetyFactor = 1.25; // 25% for small motors
-                    else if (shaftPower < 15) safetyFactor = 1.15; // 15% for medium
+                    // Penyesuaian efisiensi berdasarkan RPM (RPM tinggi sedikit menggeser efisiensi operasional)
+                    let adjustedEff = pump.eff;
+                    if (rpm === 2900 && pump.id === 'split_case') adjustedEff -= 3; // Split case optimal di 1450 RPM
 
-                    // 5. Select Standard Motor
+                    const shaftPower = hydraulicPower / (adjustedEff / 100);
+                    
+                    // Safety Factor berdasarkan ukuran daya
+                    let safetyFactor = 1.10;
+                    if (shaftPower < 1.5) safetyFactor = 1.25;
+                    else if (shaftPower < 15) safetyFactor = 1.15;
+
                     const minMotor = shaftPower * safetyFactor;
                     const recommendedMotor = standardMotors.find(m => m >= minMotor) || standardMotors[standardMotors.length - 1];
 
                     recommendations.push({
-                        ...pump, score, matchStatus, statusColor, shaftPower, recommendedMotor
+                        ...pump, score, matchStatus, statusColor, shaftPower, recommendedMotor, adjustedEff
                     });
                 });
 
-                // Sort recommendations by score (Highest score first)
                 recommendations.sort((a, b) => b.score - a.score);
 
-                // Render logic
                 const listEl = document.getElementById('recommendationList');
                 listEl.innerHTML = '';
 
@@ -269,45 +288,56 @@
                     listEl.innerHTML = `
                         <div class="p-8 border-2 border-dashed border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/20 rounded-2xl text-center">
                             <i class="fas fa-exclamation-triangle text-red-400 dark:text-red-500 text-4xl mb-3"></i>
-                            <h4 class="text-red-800 dark:text-red-400 font-bold text-lg mb-1">Tidak Ada Tipe Standar yang Cocok</h4>
+                            <h4 class="text-red-800 dark:text-red-400 font-bold text-lg mb-1">Di Luar Rentang Standar Tunggal</h4>
                             <p class="text-sm text-red-600 dark:text-red-300 mt-2 leading-relaxed">
-                                Kombinasi Flow (<strong class="text-red-800 dark:text-red-400">${flow.toFixed(1)} m³/h</strong>) dan Head (<strong class="text-red-800 dark:text-red-400">${head} meter</strong>) berada di luar rentang ideal satu tipe pompa tunggal.
+                                Kombinasi Flow (<strong class="text-red-800 dark:text-red-400">${flowM3h.toFixed(1)} m³/h</strong>) dan Head (<strong class="text-red-800 dark:text-red-400">${head} m</strong>) terlalu ekstrem untuk satu jenis pompa standar.
                             </p>
                             <div class="mt-4 text-xs text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40 p-3 rounded-lg text-left">
-                                <strong>Saran Engineer:</strong><br>
-                                • Jika Head terlalu tinggi: Pertimbangkan merangkai pompa secara <strong>Seri</strong>.<br>
-                                • Jika Flow terlalu besar: Pertimbangkan memecah beban dengan beberapa pompa paralel.
+                                <strong>Rekomendasi Engineer:</strong><br>
+                                • Head terlalu tinggi: Gunakan konfigurasi pompa <strong>Seri</strong> (Multi-stage).<br>
+                                • Flow terlalu besar: Gunakan beberapa unit pompa secara <strong>Paralel</strong>.
                             </div>
                         </div>`;
                 } else {
                     recommendations.forEach((rec, index) => {
                         const isTop = index === 0 && rec.score === 100;
                         
-                        // Menyesuaikan warna badge untuk mode gelap
                         let statusColorClass = rec.statusColor;
                         if(rec.statusColor.includes('green')) statusColorClass = 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-800';
                         if(rec.statusColor.includes('yellow')) statusColorClass = 'text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-800';
 
                         listEl.innerHTML += `
-                            <div class="border rounded-2xl p-6 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden group ${isTop ? 'border-blue-200 dark:border-blue-700 ring-1 ring-blue-100 dark:ring-blue-900' : 'border-gray-100 dark:border-gray-700'}">
-                                ${isTop ? '<div class="absolute top-0 right-0 bg-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-sm"><i class="fas fa-star text-yellow-300 mr-1"></i> Rekomendasi Utama</div>' : ''}
+                            <div class="border rounded-2xl p-5 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all relative overflow-hidden group ${isTop ? 'border-blue-300 dark:border-blue-600 ring-1 ring-blue-100 dark:ring-blue-900' : 'border-gray-200 dark:border-gray-700'}">
+                                ${isTop ? '<div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-sm"><i class="fas fa-star text-yellow-300 mr-1"></i> Rekomendasi Utama</div>' : ''}
                                 
-                                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">${rec.name}</h4>
-                                    <span class="text-xs font-semibold px-2.5 py-1 border rounded-md whitespace-nowrap ${statusColorClass}">${rec.matchStatus}</span>
-                                </div>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">${rec.desc}</p>
-                                
-                                <div class="grid grid-cols-2 gap-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                                    <div>
-                                        <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-1">Daya Poros Pompa</div>
-                                        <div class="text-2xl font-black text-gray-800 dark:text-gray-100">${rec.shaftPower.toFixed(2)} <span class="text-sm font-medium text-gray-500 dark:text-gray-400">kW</span></div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center"><i class="fas fa-percentage mr-1"></i> Asumsi Efisiensi: ${rec.eff}%</div>
+                                <div class="flex flex-col md:flex-row gap-4 items-start">
+                                    <!-- Thumbnail Foto/Ilustrasi Pompa -->
+                                    <div class="w-full md:w-32 h-28 bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700 relative">
+                                        <img src="${rec.img}" alt="${rec.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/300x200/1e293b/cbd5e1?text=Pump+Unit'">
+                                        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent flex items-end p-2">
+                                            <span class="text-[10px] text-white font-medium truncate">${rpm} RPM</span>
+                                        </div>
                                     </div>
-                                    <div class="border-l border-gray-200 dark:border-gray-700 pl-4">
-                                        <div class="text-[10px] text-blue-500 dark:text-blue-400 uppercase tracking-wider font-semibold mb-1">Ukuran Motor Minimal</div>
-                                        <div class="text-2xl font-black text-blue-600 dark:text-blue-400">${rec.recommendedMotor.toFixed(1)} <span class="text-sm font-medium text-blue-400">kW</span></div>
-                                        <div class="text-xs text-blue-500 dark:text-blue-400 mt-1 flex items-center"><i class="fas fa-bolt mr-1"></i> Tersedia di Pasaran</div>
+
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 gap-2">
+                                            <h4 class="font-bold text-lg text-gray-800 dark:text-white leading-tight">${rec.name}</h4>
+                                            <span class="text-xs font-semibold px-2.5 py-1 border rounded-md whitespace-nowrap self-start ${statusColorClass}">${rec.matchStatus}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">${rec.desc}</p>
+                                        
+                                        <div class="grid grid-cols-2 gap-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700">
+                                            <div>
+                                                <div class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-0.5">Daya Poros (Shaft Power)</div>
+                                                <div class="text-xl font-black text-gray-800 dark:text-gray-100">${rec.shaftPower.toFixed(2)} <span class="text-xs font-medium text-gray-500 dark:text-gray-400">kW</span></div>
+                                                <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5"><i class="fas fa-percentage mr-1"></i> Asumsi Eff: ${rec.adjustedEff}%</div>
+                                            </div>
+                                            <div class="border-l border-gray-200 dark:border-gray-700 pl-3">
+                                                <div class="text-[10px] text-blue-600 dark:text-blue-400 uppercase tracking-wider font-semibold mb-0.5">Rekomendasi Motor Standard</div>
+                                                <div class="text-xl font-black text-blue-600 dark:text-blue-400">${rec.recommendedMotor.toFixed(1)} <span class="text-xs font-medium text-blue-400">kW</span></div>
+                                                <div class="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5"><i class="fas fa-shield-alt mr-1"></i> Termasuk Safety Factor</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -315,22 +345,18 @@
                     });
                 }
 
-                // Show UI
-                document.getElementById('matchCount').innerText = `${recommendations.length} Pompa Ditemukan`;
+                document.getElementById('matchCount').innerText = `${recommendations.length} Tipe Pompa Sesuai`;
                 document.getElementById('loadingState').classList.add('hidden');
                 document.getElementById('resultsWrapper').classList.remove('hidden');
 
-            }, 700);
+            }, 600);
         });
 
-        // ==========================================
-        // FITUR DARK MODE / NIGHT MODE
-        // ==========================================
+        // Toggle Dark Mode
         const themeToggleBtn = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
         const htmlElement = document.documentElement;
 
-        // Cek jika pengguna punya preferensi tersimpan, atau cek settingan sistem OS/HP nya
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             htmlElement.classList.add('dark');
             themeIcon.classList.replace('fa-moon', 'fa-sun');
@@ -338,15 +364,13 @@
             htmlElement.classList.remove('dark');
         }
 
-        // Listener saat tombol ditekan
         themeToggleBtn.addEventListener('click', () => {
             htmlElement.classList.toggle('dark');
-            
             if (htmlElement.classList.contains('dark')) {
-                localStorage.theme = 'dark'; // Simpan pilihan pengguna
+                localStorage.theme = 'dark';
                 themeIcon.classList.replace('fa-moon', 'fa-sun');
             } else {
-                localStorage.theme = 'light'; // Simpan pilihan pengguna
+                localStorage.theme = 'light';
                 themeIcon.classList.replace('fa-sun', 'fa-moon');
             }
         });
